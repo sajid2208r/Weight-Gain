@@ -1,0 +1,901 @@
+<!-- Daily Routine & Habit Tracker -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #EEF3FC;
+    --surface: #FFFFFF;
+    --ink: #101C33;
+    --ink-soft: #51617F;
+    --ink-faint: #93A0BC;
+    --line: #DCE5F5;
+    --sage: #2F5FE0;
+    --sage-2: #5C8CF2;
+    --sage-soft: #E4ECFD;
+    --clay: #F0A23E;
+    --clay-soft: #FDEED9;
+    --miss: #E2635B;
+    --miss-soft: #FCE9E7;
+    --pending: #AEB9D2;
+    --radius: 16px;
+    --shadow: 0 4px 14px rgba(29,64,163,0.08);
+    --shadow-lg: 0 12px 28px rgba(29,64,163,0.16);
+  }
+  [data-theme="dark"] {
+    --bg: #0A1122;
+    --surface: #131C33;
+    --ink: #EAF0FE;
+    --ink-soft: #A6B3D4;
+    --ink-faint: #5E6C90;
+    --line: #223055;
+    --sage: #5C8CF2;
+    --sage-2: #8AAEFA;
+    --sage-soft: #1B2748;
+    --clay: #F2B25C;
+    --clay-soft: #2E2717;
+    --miss: #EC847B;
+    --miss-soft: #33201F;
+    --pending: #445075;
+    --shadow: 0 4px 14px rgba(0,0,0,0.35);
+    --shadow-lg: 0 14px 32px rgba(0,0,0,0.45);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  #app {
+    max-width: 460px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    padding-bottom: 84px;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Sora', sans-serif;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .screen { padding: 22px 20px 12px; animation: fadein 0.25s ease; }
+  @keyframes fadein { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .greeting { font-size: 15px; color: var(--ink-soft); margin-bottom: 2px; }
+  .page-title { font-size: 28px; line-height: 1.15; margin-bottom: 18px; }
+
+  /* Progress hero */
+  .progress-hero {
+    display: flex; align-items: center; gap: 18px;
+    background: linear-gradient(135deg, var(--sage) 0%, var(--sage-2) 100%);
+    border-radius: 20px; padding: 20px; margin-bottom: 22px;
+    box-shadow: var(--shadow-lg);
+    color: #fff; position: relative; overflow: hidden;
+  }
+  .progress-hero::after {
+    content: ''; position: absolute; right: -30px; top: -40px; width: 140px; height: 140px;
+    border-radius: 50%; background: rgba(255,255,255,0.08); pointer-events: none;
+  }
+  .ring-wrap { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+  .ring-wrap svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: rgba(255,255,255,0.25); stroke-width: 8; }
+  .ring-fg { fill: none; stroke: #fff; stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray 0.6s cubic-bezier(.34,1.56,.64,1); }
+  .ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; color: #fff; }
+  .hero-text .count { font-size: 20px; font-weight: 700; font-family: 'Sora', sans-serif; }
+  .hero-text .sub { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 3px; }
+  .hero-text .msg { font-size: 12.5px; color: rgba(255,255,255,0.75); margin-top: 6px; font-style: normal; }
+
+  /* Section */
+  .section { margin-bottom: 22px; }
+  .section-head {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 700; color: var(--ink-soft);
+    margin-bottom: 9px; padding-left: 2px; text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .section-head .count-tag {
+    color: var(--sage); font-weight: 700; font-size: 11.5px; text-transform: none; letter-spacing: 0;
+    background: var(--sage-soft); padding: 2px 8px; border-radius: 20px; margin-left: 2px;
+  }
+
+  .activity-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; padding: 12px 14px; margin-bottom: 9px;
+    cursor: pointer; transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+    box-shadow: var(--shadow);
+  }
+  .activity-row:active { transform: scale(0.985); }
+  .act-icon {
+    font-size: 19px; width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; background: var(--sage-soft);
+  }
+  .act-body { flex: 1; min-width: 0; }
+  .act-name { font-size: 15px; font-weight: 600; }
+  .act-meta { font-size: 12.5px; color: var(--ink-faint); margin-top: 1px; }
+  .status-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .status-btn {
+    width: 34px; height: 34px; border-radius: 11px; border: 1.5px solid var(--line);
+    background: var(--surface); font-size: 15px; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: var(--ink-faint); transition: all 0.15s ease;
+  }
+  .status-btn.done.active { background: var(--sage); border-color: var(--sage); color: #fff; }
+  .status-btn.miss.active { background: var(--miss); border-color: var(--miss); color: #fff; }
+  .status-btn.pop { animation: pop 0.28s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .activity-row.row-done { border-color: var(--sage); }
+  .activity-row.row-miss { border-color: var(--miss); }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-faint); }
+  .empty-state .big {
+    font-size: 30px; margin: 0 auto 12px; width: 64px; height: 64px; border-radius: 50%;
+    background: var(--sage-soft); display: flex; align-items: center; justify-content: center;
+  }
+  .empty-state .msg1 { font-size: 15px; color: var(--ink-soft); margin-bottom: 4px; }
+  .empty-state .msg2 { font-size: 13.5px; }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 460px; background: var(--surface);
+    box-shadow: 0 -2px 16px rgba(29,64,163,0.08);
+    display: flex; justify-content: space-around; padding: 10px 6px 16px;
+    z-index: 20;
+  }
+  .nav-btn {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    background: none; border: none; cursor: pointer; color: var(--ink-faint);
+    font-family: inherit; font-size: 11px; font-weight: 600; padding: 5px 16px; border-radius: 12px;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .nav-btn .ic { font-size: 18px; transition: transform 0.15s ease; }
+  .nav-btn.active { color: var(--sage); background: var(--sage-soft); }
+  .nav-btn.active .ic { transform: translateY(-1px); }
+
+  /* History */
+  .history-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 13px 15px; margin-bottom: 9px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; box-shadow: var(--shadow); transition: transform 0.1s ease;
+  }
+  .history-card:active { transform: scale(0.985); }
+  .history-card .date { font-size: 14.5px; font-weight: 500; }
+  .history-card .pct { font-size: 14px; font-weight: 600; color: var(--sage); }
+  .history-card .frac { font-size: 12px; color: var(--ink-faint); margin-top: 1px; }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 20px; }
+  .cal-dow { text-align: center; font-size: 11px; color: var(--ink-faint); font-weight: 600; }
+  .cal-cell {
+    aspect-ratio: 1; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 12.5px; font-weight: 500; cursor: pointer; border: 1px solid var(--line); color: var(--ink-soft);
+    transition: transform 0.1s ease;
+  }
+  .cal-cell:active { transform: scale(0.9); }
+  .cal-cell.empty { visibility: hidden; }
+  .cal-cell.today { box-shadow: 0 0 0 2px var(--sage); font-weight: 700; }
+
+  /* Stat cards */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px;
+    box-shadow: var(--shadow);
+  }
+  .stat-card .val { font-size: 21px; font-family: 'Sora', sans-serif; font-weight: 700; }
+  .stat-card .lbl { font-size: 12px; color: var(--ink-faint); margin-top: 3px; }
+  .stat-card.streak-card {
+    background: linear-gradient(135deg, var(--clay) 0%, #F7C978 100%); border: none; color: #3A2405;
+  }
+  .stat-card.streak-card .lbl { color: rgba(58,36,5,0.75); }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; margin-bottom: 6px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 6px; }
+  .bar-fill { width: 100%; border-radius: 8px 8px 4px 4px; background: linear-gradient(180deg, var(--sage-2), var(--sage)); min-height: 3px; transition: height 0.4s ease; }
+  .bar-day { font-size: 11px; color: var(--ink-faint); }
+
+  /* Settings */
+  .settings-group { margin-bottom: 24px; }
+  .settings-title { font-size: 12.5px; font-weight: 600; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; padding-left: 2px; }
+  .setting-row {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 9px; box-shadow: var(--shadow);
+  }
+  .setting-row .lbl-main { font-size: 14.5px; font-weight: 500; }
+  .setting-row .lbl-sub { font-size: 12.5px; color: var(--ink-faint); margin-top: 1px; }
+  .time-input {
+    border: 1px solid var(--line); border-radius: 8px; background: var(--bg);
+    padding: 5px 8px; font-family: inherit; font-size: 13px; color: var(--ink); width: 92px;
+  }
+  .toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-track {
+    position: absolute; inset: 0; background: var(--line); border-radius: 20px; cursor: pointer; transition: background 0.2s;
+  }
+  .toggle-track::after {
+    content: ''; position: absolute; width: 18px; height: 18px; left: 3px; top: 3px;
+    background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  }
+  .toggle input:checked + .toggle-track { background: var(--sage); }
+  .toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+  .seg-control { display: flex; background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+  .seg-btn { flex: 1; text-align: center; padding: 7px 0; border-radius: 8px; font-size: 13px; cursor: pointer; color: var(--ink-faint); }
+  .seg-btn.active { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: var(--shadow); }
+
+  .btn { border: none; border-radius: 12px; padding: 13px 16px; font-family: inherit; font-size: 14.5px; font-weight: 600; cursor: pointer; width: 100%; transition: transform 0.1s ease; }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: linear-gradient(135deg, var(--sage), var(--sage-2)); color: white; box-shadow: 0 4px 12px rgba(47,95,224,0.3); }
+  .btn-ghost { background: var(--surface); color: var(--ink-soft); border: 1px solid var(--line); }
+  .btn-danger { background: var(--miss-soft); color: var(--miss); }
+
+  /* Modal / detail sheet */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 30;
+    display: flex; align-items: flex-end; justify-content: center;
+  }
+  .sheet {
+    background: var(--surface); width: 100%; max-width: 460px; border-radius: 20px 20px 0 0;
+    padding: 22px 20px 28px; max-height: 82vh; overflow-y: auto;
+    animation: slideup 0.22s ease;
+  }
+  @keyframes slideup { from { transform: translateY(24px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+  .sheet-handle { width: 36px; height: 4px; background: var(--line); border-radius: 4px; margin: 0 auto 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; color: var(--ink-faint); margin-bottom: 5px; font-weight: 500; }
+  .field input, .field select {
+    width: 100%; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px;
+    font-family: inherit; font-size: 14.5px; background: var(--bg); color: var(--ink);
+  }
+  .row2 { display: flex; gap: 10px; }
+  .row2 .field { flex: 1; }
+  .toast {
+    position: fixed; bottom: 96px; left: 50%; transform: translateX(-50%);
+    background: var(--ink); color: var(--bg); padding: 10px 18px; border-radius: 20px;
+    font-size: 13.5px; z-index: 40; opacity: 0; transition: opacity 0.25s ease;
+  }
+  .toast.show { opacity: 1; }
+  .banner {
+    background: var(--sage-soft); border: 1px solid var(--sage); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 18px; font-size: 13px; color: var(--ink); display: flex; gap: 10px; align-items: flex-start;
+  }
+  .banner button { border: none; background: var(--sage); color: white; border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer; flex-shrink: 0; }
+  .link-btn { background: none; border: none; color: var(--sage); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; padding: 4px 0; }
+
+  /* Mobile APK polish */
+  body { overscroll-behavior-y: none; }
+  button, .activity-row, .history-card, .cal-cell, .setting-row, .seg-btn {
+    -webkit-tap-highlight-color: transparent;
+  }
+  .activity-row { transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease; }
+  .activity-row.row-done { box-shadow: 0 5px 18px rgba(47,95,224,.12); }
+  .status-btn { user-select: none; -webkit-user-select: none; }
+  .bottom-nav { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+  .screen { padding-bottom: 100px; }
+
+</style>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const ICONS = { morning:'🌅', noon:'☀️', afternoon:'🌤️', night:'🌙', sleep:'😴' };
+  const LABELS = { morning:'Morning', noon:'Noon', afternoon:'Afternoon', night:'Night', sleep:'Sleep' };
+  const ORDER = ['morning','noon','afternoon','night','sleep'];
+
+  const DEFAULT_ACTIVITIES = [
+    { id:'banana-am', name:'Banana', icon:'🍌', category:'morning', target:'', reminderTime:'08:00', notifyOn:true, custom:false },
+    { id:'egg-am', name:'Egg', icon:'🥚', category:'morning', target:'', reminderTime:'08:00', notifyOn:true, custom:false },
+    { id:'walk', name:'Walk', icon:'🚶', category:'morning', target:'20–30 minutes', reminderTime:'09:00', notifyOn:true, custom:false },
+    { id:'exercise', name:'Exercise', icon:'🏋️', category:'morning', target:'', reminderTime:'09:30', notifyOn:true, custom:false },
+    { id:'lunch', name:'Lunch', icon:'🍛', category:'noon', target:'', reminderTime:'13:30', notifyOn:true, custom:false },
+    { id:'peanut', name:'Peanut', icon:'🥜', category:'noon', target:'', reminderTime:'13:30', notifyOn:true, custom:false },
+    { id:'dates-noon', name:'Dates', icon:'🌰', category:'noon', target:'', reminderTime:'13:30', notifyOn:true, custom:false },
+    { id:'milk', name:'Milk', icon:'🥛', category:'afternoon', target:'', reminderTime:'17:00', notifyOn:true, custom:false },
+    { id:'oats', name:'Oats', icon:'🥣', category:'afternoon', target:'', reminderTime:'17:00', notifyOn:true, custom:false },
+    { id:'banana-pm', name:'Banana', icon:'🍌', category:'afternoon', target:'', reminderTime:'17:00', notifyOn:true, custom:false },
+    { id:'dinner', name:'Dinner', icon:'🍽️', category:'night', target:'', reminderTime:'21:00', notifyOn:true, custom:false },
+    { id:'dates-cucumber', name:'Dates + Cucumber', icon:'🥒', category:'night', target:'', reminderTime:'21:00', notifyOn:true, custom:false },
+    { id:'egg-pm', name:'Egg', icon:'🥚', category:'night', target:'', reminderTime:'21:00', notifyOn:true, custom:false },
+    { id:'raisin-water', name:'Raisin Water', icon:'💧', category:'night', target:'', reminderTime:'21:00', notifyOn:true, custom:false },
+    { id:'sleep', name:'Sleep', icon:'😴', category:'sleep', target:'6–8 hours', reminderTime:'23:00', notifyOn:true, custom:false },
+  ];
+
+  let state = {
+    activities: null,
+    logs: {},          // date -> {activityId: 'done'|'miss'}
+    settings: { theme: 'system', notificationsEnabled: true, streakThreshold: 70 },
+    tab: 'home',
+    detailActivity: null,
+    editActivity: null,   // activity being added/edited
+    historyDate: null,    // date string being viewed in detail
+    calMonthOffset: 0,
+    notifPromptDismissed: false,
+    ready: false,
+  };
+
+  function todayStr(d) {
+    const dt = d || new Date();
+    const y = dt.getFullYear(), m = String(dt.getMonth()+1).padStart(2,'0'), da = String(dt.getDate()).padStart(2,'0');
+    return `${y}-${m}-${da}`;
+  }
+  function fmtDateLong(str) {
+    const [y,m,d] = str.split('-').map(Number);
+    const dt = new Date(y, m-1, d);
+    return dt.toLocaleDateString(undefined, { month:'long', day:'numeric', year:'numeric' });
+  }
+  function fmtTime12(hhmm) {
+    if (!hhmm) return '';
+    let [h,m] = hhmm.split(':').map(Number);
+    const ap = h >= 12 ? 'PM' : 'AM';
+    h = h % 12; if (h===0) h = 12;
+    return `${h}:${String(m).padStart(2,'0')} ${ap}`;
+  }
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove('show'), 1800);
+  }
+  function uid() { return 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+  // Persistent storage compatible with normal Android WebView / APK wrappers.
+  // localStorage keeps progress after the app is closed and reopened.
+  async function storeGet(key) {
+    try {
+      const value = localStorage.getItem('routine_tracker_' + key);
+      return value !== null ? JSON.parse(value) : null;
+    } catch(e) {
+      console.error('storage get failed', e);
+      return null;
+    }
+  }
+
+  async function storeSet(key, val) {
+    try {
+      localStorage.setItem('routine_tracker_' + key, JSON.stringify(val));
+      return true;
+    } catch(e) {
+      console.error('storage set failed', e);
+      return false;
+    }
+  }
+
+  async function loadAll() {
+    const [acts, settings] = await Promise.all([ storeGet('activities'), storeGet('settings') ]);
+    state.activities = acts || DEFAULT_ACTIVITIES.slice();
+    if (settings) state.settings = Object.assign(state.settings, settings);
+    applyTheme();
+    // load logs for last 60 days lazily as needed; load today + last 8 days upfront for streak/week
+    const keys = [];
+    const now = new Date();
+    for (let i=0;i<60;i++){ const d=new Date(now); d.setDate(d.getDate()-i); keys.push(todayStr(d)); }
+    const results = await Promise.all(keys.map(k => storeGet('log:'+k)));
+    keys.forEach((k,i)=>{ if (results[i]) state.logs[k] = results[i]; });
+    state.ready = true;
+    render();
+  }
+
+  function applyTheme() {
+    let t = state.settings.theme;
+    if (t === 'system') {
+      t = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  }
+
+  async function setStatus(date, activityId, status) {
+    const log = state.logs[date] ? Object.assign({}, state.logs[date]) : {};
+    if (log[activityId] === status) { delete log[activityId]; }
+    else { log[activityId] = status; }
+    state.logs[date] = log;
+    lastMarkedId = activityId;
+    render();
+    setTimeout(()=>{ lastMarkedId = null; }, 350);
+    const st = dayStats(date);
+    if (date === todayStr() && st.pct === 100 && st.total > 0) celebrate();
+    await storeSet('log:'+date, log);
+  }
+
+  function celebrate() {
+    if (state._celebratedToday === todayStr()) return;
+    state._celebratedToday = todayStr();
+    toast('🎉 All activities completed today!');
+  }
+
+  function activitiesByCategory(cat) {
+    return state.activities.filter(a => a.category === cat);
+  }
+
+  function dayStats(date) {
+    const log = state.logs[date] || {};
+    const total = state.activities.length;
+    let done = 0, miss = 0;
+    state.activities.forEach(a => { if (log[a.id]==='done') done++; else if (log[a.id]==='miss') miss++; });
+    const tracked = done + miss;
+    const pct = total ? Math.round((done/total)*100) : 0;
+    return { total, done, miss, tracked, pct };
+  }
+
+  function computeStreak() {
+    let streak = 0;
+    let d = new Date();
+    // if today not yet meeting threshold, still check backwards from yesterday if today has no data
+    for (let i=0;i<400;i++){
+      const ds = todayStr(d);
+      const st = dayStats(ds);
+      const hasData = Object.keys(state.logs[ds]||{}).length > 0;
+      if (i===0 && !hasData) { d.setDate(d.getDate()-1); continue; } // skip today if untouched
+      if (!hasData) break;
+      if (st.pct >= state.settings.streakThreshold) { streak++; d.setDate(d.getDate()-1); }
+      else break;
+    }
+    return streak;
+  }
+  function longestStreak() {
+    let best=0, cur=0;
+    let d = new Date(); d.setDate(d.getDate()-59);
+    for (let i=0;i<60;i++){
+      const ds = todayStr(d);
+      const hasData = Object.keys(state.logs[ds]||{}).length>0;
+      if (hasData && dayStats(ds).pct >= state.settings.streakThreshold) { cur++; best=Math.max(best,cur); }
+      else cur=0;
+      d.setDate(d.getDate()+1);
+    }
+    return best;
+  }
+
+  // ---------- Rendering ----------
+  function render() {
+    const app = document.getElementById('app');
+    if (!state.ready) { app.innerHTML = '<div class="screen"><p style="color:var(--ink-faint);text-align:center;margin-top:40vh;">Loading your routine…</p></div>'; return; }
+    let html = '';
+    if (state.tab === 'home') html = renderHome();
+    else if (state.tab === 'history') html = renderHistory();
+    else if (state.tab === 'progress') html = renderProgress();
+    else if (state.tab === 'settings') html = renderSettings();
+    html += renderNav();
+    app.innerHTML = html;
+    if (state.detailActivity) renderDetailModal();
+    if (state.editActivity !== null) renderEditModal();
+    if (state.historyDate) renderHistoryDetailModal();
+    attachHandlers();
+  }
+
+  function ring(pct) {
+    const r = 31, c = 2*Math.PI*r;
+    const off = c - (pct/100)*c;
+    return `<div class="ring-wrap"><svg width="78" height="78" viewBox="0 0 78 78">
+      <circle class="ring-bg" cx="39" cy="39" r="${r}"></circle>
+      <circle class="ring-fg" cx="39" cy="39" r="${r}" stroke-dasharray="${c}" stroke-dashoffset="${off}"></circle>
+    </svg><div class="ring-label">${pct}%</div></div>`;
+  }
+
+  function renderHome() {
+    const date = todayStr();
+    const st = dayStats(date);
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    let notifBanner = '';
+    if (!state.notifPromptDismissed && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+      notifBanner = `<div class="banner"><div>Enable reminders so the app can notify you when it's time for your routine.</div><button id="btn-enable-notif">Enable</button></div>`;
+    }
+    const motivational = st.pct === 100 ? "Perfect day — enjoy it 🎉" :
+      st.pct >= 75 ? "Almost there, keep going" :
+      st.pct >= 40 ? "Good progress so far" :
+      st.tracked === 0 ? "Let's get started" : "Every check counts";
+    let body = `<div class="screen">
+      <div class="greeting">${greet} 👋</div>
+      <h1 class="page-title">Today's Routine</h1>
+      ${notifBanner}
+      <div class="progress-hero">
+        ${ring(st.pct)}
+        <div class="hero-text">
+          <div class="count">${st.done} / ${st.total} completed</div>
+          <div class="sub">${st.tracked} tracked · ${st.total - st.tracked} pending</div>
+          <div class="msg">${motivational}</div>
+        </div>
+      </div>`;
+
+    ORDER.forEach(cat => {
+      const items = activitiesByCategory(cat);
+      if (!items.length) return;
+      body += `<div class="section"><div class="section-head">${ICONS[cat]} ${LABELS[cat]} <span class="count-tag">· ${items.filter(a=> (state.logs[date]||{})[a.id]==='done').length}/${items.length}</span></div>`;
+      items.forEach(a => { body += activityRow(a, date); });
+      body += `</div>`;
+    });
+
+    if (!state.activities.length) {
+      body += `<div class="empty-state"><div class="big">🎉</div><div class="msg1">All activities completed!</div></div>`;
+    }
+    body += `</div>`;
+    return body;
+  }
+
+  function activityRow(a, date) {
+    const log = state.logs[date] || {};
+    const status = log[a.id];
+    const metaBits = [];
+    if (a.target) metaBits.push(a.target);
+    if (a.reminderTime) metaBits.push(fmtTime12(a.reminderTime));
+    const rowClass = status==='done' ? 'row-done' : status==='miss' ? 'row-miss' : '';
+    const justSet = a.id === lastMarkedId;
+    return `<div class="activity-row ${rowClass}" data-open-detail="${a.id}">
+      <div class="act-icon">${a.icon || '•'}</div>
+      <div class="act-body">
+        <div class="act-name">${escapeHtml(a.name)}</div>
+        <div class="act-meta">${metaBits.join(' · ') || (status==='done'?'Completed':status==='miss'?'Not completed':'Pending')}</div>
+      </div>
+      <div class="status-btns">
+        <div class="status-btn done ${status==='done'?'active':''} ${justSet && status==='done'?'pop':''}" data-mark="${a.id}" data-status="done" data-date="${date}" title="Mark completed">✓</div>
+        <div class="status-btn miss ${status==='miss'?'active':''} ${justSet && status==='miss'?'pop':''}" data-mark="${a.id}" data-status="miss" data-date="${date}" title="Mark not completed">×</div>
+      </div>
+    </div>`;
+  }
+  let lastMarkedId = null;
+
+  function renderHistory() {
+    const dates = Object.keys(state.logs).filter(d => Object.keys(state.logs[d]).length>0).sort((a,b)=>b.localeCompare(a));
+    let body = `<div class="screen"><h1 class="page-title">History</h1>`;
+    body += renderCalendar();
+    body += `<div class="settings-title">Recent days</div>`;
+    if (!dates.length) {
+      body += `<div class="empty-state"><div class="big">📖</div><div class="msg1">No activity history yet.</div><div class="msg2">Complete today's routine to start building your history.</div></div>`;
+    } else {
+      dates.slice(0,30).forEach(d => {
+        const st = dayStats(d);
+        body += `<div class="history-card" data-open-history="${d}">
+          <div><div class="date">${fmtDateLong(d)}</div><div class="frac">${st.done} / ${st.total} completed</div></div>
+          <div class="pct">${st.pct}%</div>
+        </div>`;
+      });
+    }
+    body += `</div>`;
+    return body;
+  }
+
+  function renderCalendar() {
+    const now = new Date();
+    const view = new Date(now.getFullYear(), now.getMonth()+state.calMonthOffset, 1);
+    const monthLabel = view.toLocaleDateString(undefined, { month:'long', year:'numeric' });
+    const firstDow = view.getDay();
+    const daysInMonth = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+    let cells = '';
+    ['S','M','T','W','T','F','S'].forEach(d => cells += `<div class="cal-dow">${d}</div>`);
+    for (let i=0;i<firstDow;i++) cells += `<div class="cal-cell empty"></div>`;
+    for (let day=1; day<=daysInMonth; day++) {
+      const dt = new Date(view.getFullYear(), view.getMonth(), day);
+      const ds = todayStr(dt);
+      const st = dayStats(ds);
+      const hasData = Object.keys(state.logs[ds]||{}).length>0;
+      let bg = 'transparent', color='var(--ink-faint)';
+      if (hasData) {
+        if (st.pct >= 75) { bg='var(--sage)'; color='white'; }
+        else if (st.pct >= 40) { bg='var(--clay-soft)'; color='var(--clay)'; }
+        else { bg='var(--miss-soft)'; color='var(--miss)'; }
+      }
+      const isToday = ds === todayStr();
+      cells += `<div class="cal-cell ${isToday?'today':''}" style="background:${bg};color:${color};" data-open-history="${ds}">${day}</div>`;
+    }
+    return `<div class="setting-row" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span class="link-btn" data-cal-nav="-1">‹</span>
+      <span style="font-weight:600;font-size:14px;">${monthLabel}</span>
+      <span class="link-btn" data-cal-nav="1">›</span>
+    </div>
+    <div class="cal-grid">${cells}</div>`;
+  }
+
+  function renderProgress() {
+    const streak = computeStreak();
+    const longest = longestStreak();
+    const days = [];
+    for (let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push(todayStr(d)); }
+    let totalDone=0, totalMiss=0, sumPct=0, bestDay=null, bestPct=-1;
+    days.forEach(ds => {
+      const st = dayStats(ds);
+      totalDone += st.done; totalMiss += st.miss; sumPct += st.pct;
+      if (st.pct > bestPct) { bestPct = st.pct; bestDay = ds; }
+    });
+    const avgPct = Math.round(sumPct/7);
+    let body = `<div class="screen"><h1 class="page-title">Progress</h1>
+      <div class="stat-grid">
+        <div class="stat-card streak-card"><div class="val">🔥 ${streak}</div><div class="lbl">Current streak (days)</div></div>
+        <div class="stat-card"><div class="val">🏆 ${longest}</div><div class="lbl">Longest streak (days)</div></div>
+        <div class="stat-card"><div class="val">✅ ${totalDone}</div><div class="lbl">Completed this week</div></div>
+        <div class="stat-card"><div class="val">✕ ${totalMiss}</div><div class="lbl">Missed this week</div></div>
+        <div class="stat-card"><div class="val">${avgPct}%</div><div class="lbl">Average completion</div></div>
+        <div class="stat-card"><div class="val">🌟 ${bestDay ? new Date(bestDay).toLocaleDateString(undefined,{weekday:'short'}) : '–'}</div><div class="lbl">Best day (${bestPct>=0?bestPct:0}%)</div></div>
+      </div>
+      <div class="settings-title">This week</div>
+      <div class="bar-chart">`;
+    days.forEach(ds => {
+      const st = dayStats(ds);
+      const h = Math.max(3, st.pct);
+      body += `<div class="bar-col"><div class="bar-fill" style="height:${h}%;"></div></div>`;
+    });
+    body += `</div><div class="bar-chart" style="height:auto;margin-top:-2px;">`;
+    days.forEach(ds => {
+      body += `<div class="bar-col"><div class="bar-day">${new Date(ds).toLocaleDateString(undefined,{weekday:'short'}).slice(0,1)}</div></div>`;
+    });
+    body += `</div></div>`;
+    return body;
+  }
+
+  function renderSettings() {
+    const s = state.settings;
+    let body = `<div class="screen"><h1 class="page-title">Settings</h1>
+
+      <div class="settings-group">
+        <div class="settings-title">Appearance</div>
+        <div class="seg-control">
+          ${['light','dark','system'].map(t=>`<div class="seg-btn ${s.theme===t?'active':''}" data-theme-set="${t}">${t[0].toUpperCase()+t.slice(1)}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="settings-group">
+        <div class="settings-title">Notifications</div>
+        <div class="setting-row">
+          <div><div class="lbl-main">Enable all reminders</div><div class="lbl-sub">Turn every reminder on or off at once</div></div>
+          <label class="toggle"><input type="checkbox" id="notif-master" ${s.notificationsEnabled?'checked':''}><span class="toggle-track"></span></label>
+        </div>`;
+    state.activities.forEach(a => {
+      body += `<div class="setting-row">
+        <div><div class="lbl-main">${escapeHtml(a.name)}</div><div class="lbl-sub">${LABELS[a.category]}</div></div>
+        <input type="time" class="time-input" data-reminder-time="${a.id}" value="${a.reminderTime||''}">
+        <label class="toggle"><input type="checkbox" data-reminder-toggle="${a.id}" ${a.notifyOn?'checked':''}><span class="toggle-track"></span></label>
+      </div>`;
+    });
+    body += `</div>
+
+      <div class="settings-group">
+        <div class="settings-title">Activities</div>
+        <div class="setting-row" data-add-activity="1" style="cursor:pointer;">
+          <div class="lbl-main">＋ Add activity</div>
+        </div>`;
+    state.activities.forEach(a => {
+      body += `<div class="setting-row" data-edit-activity="${a.id}" style="cursor:pointer;">
+        <div><div class="lbl-main">${a.icon||''} ${escapeHtml(a.name)}</div><div class="lbl-sub">${LABELS[a.category]}${a.custom?' · Custom':''}</div></div>
+        <span style="color:var(--ink-faint);font-size:18px;">›</span>
+      </div>`;
+    });
+    body += `</div>
+
+      <div class="settings-group">
+        <div class="settings-title">Data</div>
+        <button class="btn btn-danger" id="btn-clear-history" style="margin-bottom:8px;">Clear history</button>
+        <button class="btn btn-ghost" id="btn-reset-routine">Reset to default routine</button>
+      </div>
+    </div>`;
+    return body;
+  }
+
+  function renderNav() {
+    const tabs = [ ['home','🏠','Home'], ['history','📅','History'], ['progress','📊','Progress'], ['settings','⚙️','Settings'] ];
+    return `<div class="bottom-nav">${tabs.map(([id,ic,lbl])=>`<button class="nav-btn ${state.tab===id?'active':''}" data-tab="${id}"><span class="ic">${ic}</span>${lbl}</button>`).join('')}</div>`;
+  }
+
+  function renderDetailModal() {
+    const a = state.activities.find(x=>x.id===state.detailActivity);
+    if (!a) { state.detailActivity = null; return; }
+    const date = todayStr();
+    const status = (state.logs[date]||{})[a.id];
+    const statusLabel = status==='done' ? '✓ Completed' : status==='miss' ? '× Not completed' : '○ Pending';
+    const div = document.createElement('div');
+    div.className = 'overlay';
+    div.id = 'detail-overlay';
+    div.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 style="font-size:20px;margin-bottom:14px;">${a.icon||''} ${escapeHtml(a.name)}</h2>
+      ${a.target ? `<div class="field"><label>Target</label><div style="font-size:14.5px;">${escapeHtml(a.target)}</div></div>` : ''}
+      <div class="field"><label>Reminder</label><div style="font-size:14.5px;">${a.reminderTime?fmtTime12(a.reminderTime):'None'} ${a.notifyOn?'':'(off)'}</div></div>
+      <div class="field"><label>Status</label><div style="font-size:14.5px;">${statusLabel}</div></div>
+      <div class="row2" style="margin-top:16px;">
+        <button class="btn btn-primary" data-modal-mark="done" data-id="${a.id}" data-date="${date}">Mark ✓ Done</button>
+        <button class="btn btn-ghost" data-modal-mark="miss" data-id="${a.id}" data-date="${date}">Mark × Not done</button>
+      </div>
+      <button class="btn btn-ghost" style="margin-top:8px;" id="detail-close">Close</button>
+    </div>`;
+    document.getElementById('app').appendChild(div);
+  }
+
+  function renderHistoryDetailModal() {
+    const ds = state.historyDate;
+    const st = dayStats(ds);
+    const log = state.logs[ds] || {};
+    const div = document.createElement('div');
+    div.className = 'overlay';
+    div.id = 'hist-overlay';
+    let rows = '';
+    ORDER.forEach(cat => {
+      const items = activitiesByCategory(cat);
+      if (!items.length) return;
+      rows += `<div class="section-head" style="margin-top:10px;">${ICONS[cat]} ${LABELS[cat]}</div>`;
+      items.forEach(a => {
+        const st2 = log[a.id];
+        const sym = st2==='done' ? '✓' : st2==='miss' ? '×' : '○';
+        const col = st2==='done' ? 'var(--sage)' : st2==='miss' ? 'var(--miss)' : 'var(--pending)';
+        rows += `<div style="display:flex;justify-content:space-between;padding:7px 2px;font-size:14px;">
+          <span>${a.icon||''} ${escapeHtml(a.name)}</span><span style="color:${col};font-weight:700;">${sym}</span>
+        </div>`;
+      });
+    });
+    div.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 style="font-size:19px;margin-bottom:4px;">${fmtDateLong(ds)}</h2>
+      <div style="color:var(--ink-faint);font-size:13.5px;margin-bottom:6px;">${st.done} / ${st.total} completed · ${st.pct}%</div>
+      ${rows}
+      <button class="btn btn-ghost" style="margin-top:16px;" id="hist-close">Close</button>
+    </div>`;
+    document.getElementById('app').appendChild(div);
+  }
+
+  function renderEditModal() {
+    const isNew = state.editActivity === 'new';
+    const a = isNew ? { id:uid(), name:'', icon:'📌', category:'morning', target:'', reminderTime:'08:00', notifyOn:true, custom:true }
+                     : state.activities.find(x=>x.id===state.editActivity);
+    if (!a) { state.editActivity = null; return; }
+    const div = document.createElement('div');
+    div.className = 'overlay';
+    div.id = 'edit-overlay';
+    div.innerHTML = `<div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 style="font-size:19px;margin-bottom:14px;">${isNew?'Add activity':'Edit activity'}</h2>
+      <div class="field"><label>Name</label><input type="text" id="ef-name" value="${escapeAttr(a.name)}" placeholder="Activity name"></div>
+      <div class="row2">
+        <div class="field"><label>Icon (emoji)</label><input type="text" id="ef-icon" value="${escapeAttr(a.icon||'')}" maxlength="4"></div>
+        <div class="field"><label>Category</label>
+          <select id="ef-category">${ORDER.map(c=>`<option value="${c}" ${a.category===c?'selected':''}>${LABELS[c]}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="field"><label>Target / description (optional)</label><input type="text" id="ef-target" value="${escapeAttr(a.target||'')}" placeholder="e.g. 20–30 minutes"></div>
+      <div class="row2">
+        <div class="field"><label>Reminder time</label><input type="time" id="ef-time" value="${a.reminderTime||''}"></div>
+        <div class="field"><label>Notify</label>
+          <label class="toggle" style="margin-top:8px;"><input type="checkbox" id="ef-notify" ${a.notifyOn?'checked':''}><span class="toggle-track"></span></label>
+        </div>
+      </div>
+      <button class="btn btn-primary" id="ef-save" data-id="${a.id}" data-isnew="${isNew}">Save</button>
+      ${!isNew ? `<button class="btn btn-danger" id="ef-delete" data-id="${a.id}" style="margin-top:8px;">Delete activity</button>` : ''}
+      <button class="btn btn-ghost" id="ef-cancel" style="margin-top:8px;">Cancel</button>
+    </div>`;
+    document.getElementById('app').appendChild(div);
+  }
+
+  function escapeHtml(s) { return (s||'').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  // ---------- Event handling ----------
+  function attachHandlers() {
+    document.querySelectorAll('[data-tab]').forEach(el => el.onclick = () => { state.tab = el.dataset.tab; render(); });
+    document.querySelectorAll('[data-mark]').forEach(el => el.onclick = (e) => {
+      e.stopPropagation();
+      setStatus(el.dataset.date, el.dataset.mark, el.dataset.status);
+    });
+    document.querySelectorAll('[data-open-detail]').forEach(el => el.onclick = () => { state.detailActivity = el.dataset.openDetail; render(); });
+    document.querySelectorAll('[data-open-history]').forEach(el => el.onclick = () => { state.historyDate = el.dataset.openHistory; render(); });
+    document.querySelectorAll('[data-cal-nav]').forEach(el => el.onclick = () => { state.calMonthOffset += parseInt(el.dataset.calNav); render(); });
+    document.querySelectorAll('[data-theme-set]').forEach(el => el.onclick = async () => {
+      state.settings.theme = el.dataset.themeSet; applyTheme(); render(); await storeSet('settings', state.settings);
+    });
+    document.querySelectorAll('[data-edit-activity]').forEach(el => el.onclick = () => { state.editActivity = el.dataset.editActivity; render(); });
+    const addBtn = document.querySelector('[data-add-activity]');
+    if (addBtn) addBtn.onclick = () => { state.editActivity = 'new'; render(); };
+
+    const notifMaster = document.getElementById('notif-master');
+    if (notifMaster) notifMaster.onchange = async () => {
+      state.settings.notificationsEnabled = notifMaster.checked; await storeSet('settings', state.settings); toast(notifMaster.checked ? 'Reminders enabled' : 'Reminders disabled');
+    };
+    document.querySelectorAll('[data-reminder-toggle]').forEach(el => el.onchange = async () => {
+      const a = state.activities.find(x=>x.id===el.dataset.reminderToggle);
+      if (a) { a.notifyOn = el.checked; await storeSet('activities', state.activities); }
+    });
+    document.querySelectorAll('[data-reminder-time]').forEach(el => el.onchange = async () => {
+      const a = state.activities.find(x=>x.id===el.dataset.reminderTime);
+      if (a) { a.reminderTime = el.value; await storeSet('activities', state.activities); toast('Reminder time updated'); }
+    });
+
+    const btnEnableNotif = document.getElementById('btn-enable-notif');
+    if (btnEnableNotif) btnEnableNotif.onclick = async () => {
+      if (typeof Notification !== 'undefined') { await Notification.requestPermission(); }
+      state.notifPromptDismissed = true; render();
+    };
+
+    const btnClear = document.getElementById('btn-clear-history');
+    if (btnClear) btnClear.onclick = () => { if (confirm('Clear all history? This cannot be undone.')) clearHistory(); };
+    const btnReset = document.getElementById('btn-reset-routine');
+    if (btnReset) btnReset.onclick = () => { if (confirm('Reset to the default routine? Your custom activities will be removed.')) resetRoutine(); };
+
+    // Detail modal
+    const detailClose = document.getElementById('detail-close');
+    if (detailClose) detailClose.onclick = () => { state.detailActivity = null; render(); };
+    const overlay1 = document.getElementById('detail-overlay');
+    if (overlay1) overlay1.onclick = (e) => { if (e.target === overlay1) { state.detailActivity = null; render(); } };
+    document.querySelectorAll('[data-modal-mark]').forEach(el => el.onclick = async () => {
+      await setStatus(el.dataset.date, el.dataset.id, el.dataset.modalMark);
+      state.detailActivity = null; render();
+    });
+
+    // History detail modal
+    const histClose = document.getElementById('hist-close');
+    if (histClose) histClose.onclick = () => { state.historyDate = null; render(); };
+    const overlay2 = document.getElementById('hist-overlay');
+    if (overlay2) overlay2.onclick = (e) => { if (e.target === overlay2) { state.historyDate = null; render(); } };
+
+    // Edit modal
+    const efCancel = document.getElementById('ef-cancel');
+    if (efCancel) efCancel.onclick = () => { state.editActivity = null; render(); };
+    const overlay3 = document.getElementById('edit-overlay');
+    if (overlay3) overlay3.onclick = (e) => { if (e.target === overlay3) { state.editActivity = null; render(); } };
+    const efSave = document.getElementById('ef-save');
+    if (efSave) efSave.onclick = async () => {
+      const name = document.getElementById('ef-name').value.trim();
+      if (!name) { toast('Please enter a name'); return; }
+      const icon = document.getElementById('ef-icon').value.trim() || '📌';
+      const category = document.getElementById('ef-category').value;
+      const target = document.getElementById('ef-target').value.trim();
+      const reminderTime = document.getElementById('ef-time').value;
+      const notifyOn = document.getElementById('ef-notify').checked;
+      const isNew = efSave.dataset.isnew === 'true';
+      const id = efSave.dataset.id;
+      if (isNew) {
+        state.activities.push({ id, name, icon, category, target, reminderTime, notifyOn, custom:true });
+      } else {
+        const a = state.activities.find(x=>x.id===id);
+        Object.assign(a, { name, icon, category, target, reminderTime, notifyOn });
+      }
+      await storeSet('activities', state.activities);
+      state.editActivity = null; render(); toast('Saved');
+    };
+    const efDelete = document.getElementById('ef-delete');
+    if (efDelete) efDelete.onclick = async () => {
+      if (!confirm('Delete this activity?')) return;
+      state.activities = state.activities.filter(x=>x.id!==efDelete.dataset.id);
+      await storeSet('activities', state.activities);
+      state.editActivity = null; render(); toast('Activity deleted');
+    };
+  }
+
+  async function clearHistory() {
+    state.logs = {};
+    try {
+      const prefix = 'routine_tracker_log:';
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) keys.push(k);
+      }
+      keys.forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
+    render(); toast('History cleared');
+  }
+  async function resetRoutine() {
+    state.activities = DEFAULT_ACTIVITIES.map(a=>Object.assign({},a));
+    await storeSet('activities', state.activities);
+    render(); toast('Routine reset');
+  }
+
+  // Best-effort in-app reminder check (only fires while this tab is open)
+  let lastCheckedMinute = null;
+  function checkReminders() {
+    if (!state.ready || !state.settings.notificationsEnabled) return;
+    if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+    const now = new Date();
+    const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    if (hhmm === lastCheckedMinute) return;
+    lastCheckedMinute = hhmm;
+    const date = todayStr();
+    const log = state.logs[date] || {};
+    state.activities.filter(a => a.notifyOn && a.reminderTime === hhmm && !log[a.id]).forEach(a => {
+      try { new Notification(`${ICONS[a.category]} ${LABELS[a.category]} reminder`, { body: `Time for ${a.name}${a.target?' — '+a.target:''}.` }); } catch(e) {}
+    });
+  }
+  setInterval(checkReminders, 15000);
+
+  window.addEventListener('resize', () => {});
+  loadAll();
+})();
+</script>
